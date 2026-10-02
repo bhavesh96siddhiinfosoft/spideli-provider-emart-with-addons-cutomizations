@@ -310,18 +310,14 @@
                 }
             })
 
+            /* 02#27: this used to compare the whole `types` list with
+             * JSON.stringify, which throws whenever Google returns an extra
+             * type, a different order, or no locality at all - and the
+             * listener then died BEFORE setting lat and lng, so the address
+             * was rejected as invalid. The helper matches on membership and
+             * never throws. Attached once, not on every click. */
             function initialize(id) {
-                var input = document.getElementById(id);
-                var autocomplete = new google.maps.places.Autocomplete(input);
-                autocomplete.addListener('place_changed', function() {
-                    var place = autocomplete.getPlace();
-                    var placeaddress = autocomplete.getPlace().address_components;
-                    var city = place.address_components.filter(f => JSON.stringify(f.types) === JSON.stringify(['locality', 'political']))[0].long_name;
-                    var state = place.address_components.filter(f => JSON.stringify(f.types) === JSON.stringify(['administrative_area_level_1', 'political']))[0].long_name;
-                    var country = place.address_components.filter(f => JSON.stringify(f.types) === JSON.stringify(['country', 'political']))[0].long_name;
-
-                    $("#" + id).val(place.formatted_address).attr('lat', place.geometry.location.lat()).attr('lng', place.geometry.location.lng()).attr('city', city).attr('state', state).attr('country', country)
-                });
+                spideliAttachPlaceAutocomplete(id);
             }
 
             function init(id) {
