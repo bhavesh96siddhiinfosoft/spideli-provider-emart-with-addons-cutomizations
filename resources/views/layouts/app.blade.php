@@ -9,7 +9,7 @@
         <!-- CSRF Token -->
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'Laravel') }}</title>
-        <link rel="icon" type="image/x-icon" href="{{ asset('images/logo-light-icon.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('images/spideli-circle.png') }}">
         <!-- Fonts -->
         <link rel="dns-prefetch" href="//fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
