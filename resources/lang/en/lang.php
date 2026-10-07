@@ -804,5 +804,20 @@ return [
     'account_exists_email' => 'You already have account with this Email',
     'no_reviews_found' => 'No Reviews Found',
     'go' => 'Go',
+    'booking_history_period' => 'Show bookings from',
+    'booking_history_period_all' => 'All time',
+    'booking_history_period_custom' => 'Choose dates...',
+    'booking_history_period_apply' => 'Apply',
+    'booking_history_period_showing' => 'Showing: :period',
+    'booking_history_period_pick_dates' => 'Please choose a start date, an end date, or both.',
+    'booking_history_period_bad_range' => 'The start date is after the end date.',
+    'booking_history_print' => 'Print',
+    'booking_history_print_title' => 'Bookings history',
+    'booking_history_print_period' => 'Period',
+    'booking_history_print_generated' => 'Printed on',
+    'booking_history_print_none' => 'No bookings in this period.',
+    'total_bookings' => 'Total Bookings',
+    'total_amount' => 'Total Amount',
 ];  
 ?>
+

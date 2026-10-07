@@ -34,6 +34,40 @@
             <div class="table-list">
                 <div class="row">
                     <div class="col-12">
+                        {{-- The period picker and print button --}}
+                        <div class="card border mb-3" id="booking_period_card">
+                            <div class="card-body p-3">
+                                <div class="d-flex flex-wrap align-items-center">
+                                    <label class="mb-0 mr-2 font-weight-bold" for="booking_period">
+                                        <i class="mdi mdi-calendar-clock mr-1"></i>{{ trans('lang.booking_history_period') }}
+                                    </label>
+                                    <select id="booking_period" class="form-control w-auto mr-2 mb-0">
+                                        <option value="all">{{ trans('lang.booking_history_period_all') }}</option>
+                                    </select>
+                                    <div id="booking_period_custom" class="d-flex flex-wrap align-items-center mr-2" style="display:none;">
+                                        <input type="date" id="booking_period_from" class="form-control w-auto mr-2 mb-0">
+                                        <span class="mr-2">&ndash;</span>
+                                        <input type="date" id="booking_period_to" class="form-control w-auto mr-2 mb-0">
+                                        <button type="button" id="booking_period_apply" class="btn btn-primary btn-sm mr-2">{{ trans('lang.booking_history_period_apply') }}</button>
+                                    </div>
+                                    <span id="booking_period_summary" class="text-muted small ml-auto mr-2"></span>
+                                    <button type="button" id="booking_history_print" class="btn btn-outline-primary btn-sm">
+                                        <i class="mdi mdi-printer mr-1"></i>{{ trans('lang.booking_history_print') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Shown only on paper when printed --}}
+                        <div class="col-12 order-print-only mb-3" id="booking_history_print_header" style="display:none;">
+                            <h3 class="mb-1">{{ trans('lang.booking_history_print_title') }}</h3>
+                            <p class="mb-0 small"><strong>{{ trans('lang.service_provider') }}:</strong> <span id="print_provider"></span></p>
+                            <p class="mb-0 small"><strong>{{ trans('lang.booking_history_print_period') }}:</strong> <span id="print_period"></span></p>
+                            <p class="mb-0 small"><strong>{{ trans('lang.total_bookings') }}:</strong> <span id="print_total_bookings"></span> | <strong>{{ trans('lang.total_amount') }}:</strong> <span id="print_total_amount"></span></p>
+                            <p class="mb-2 small"><strong>{{ trans('lang.booking_history_print_generated') }}:</strong> <span id="print_generated"></span></p>
+                            <hr class="mt-2 mb-2">
+                        </div>
+
                         <ul class="nav nav-pills mb-3 " role="tablist">
                             <li class="nav-item">
                                 <a class="nav-link new_booking_list" data-toggle="pill" href="#new_booking_list" role="tab">{{ trans('lang.new_bookings') }}</a>
@@ -274,6 +308,86 @@
                 decimal_degits = currencyData.decimal_degits;
             }
         });
+
+        var currentActiveTable = null;
+        var currentActiveTableId = '#newBookingTable';
+        var bookingPeriodFrom = null;
+        var bookingPeriodTo = null;
+        var bookingPeriodLabel = '';
+        var periodsPopulated = false;
+        var totalFilteredBookingAmount = 0;
+        var currentProviderTitle = '';
+
+        database.collection('users').doc(provider_id).get().then(function(doc) {
+            if (doc.exists) {
+                var data = doc.data();
+                currentProviderTitle = ((data.firstName || '') + ' ' + (data.lastName || '')).trim();
+                if (!currentProviderTitle) {
+                    currentProviderTitle = data.phoneNumber || 'Provider';
+                }
+            }
+        });
+
+        function getBookingDate(booking) {
+            if (booking.createdAt && typeof booking.createdAt.toDate === 'function') {
+                return booking.createdAt.toDate();
+            }
+            if (booking.newScheduleDateTime && typeof booking.newScheduleDateTime.toDate === 'function') {
+                return booking.newScheduleDateTime.toDate();
+            }
+            if (booking.scheduleDateTime && typeof booking.scheduleDateTime.toDate === 'function') {
+                return booking.scheduleDateTime.toDate();
+            }
+            return null;
+        }
+
+        function populateBookingPeriods(snapshots) {
+            if (periodsPopulated) return;
+            var seen = {};
+            var months = [];
+            snapshots.docs.forEach(function (doc) {
+                var date = getBookingDate(doc.data());
+                if (!date) return;
+                var key = date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2);
+                if (!seen[key]) {
+                    seen[key] = true;
+                    months.push({
+                        key: key,
+                        label: date.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+                    });
+                }
+            });
+            if (months.length === 0) return;
+            months.sort(function (a, b) { return a.key < b.key ? 1 : -1; });
+
+            var select = $('#booking_period');
+            select.find('option:not([value="all"])').remove();
+            months.forEach(function (month) {
+                select.append($('<option>').val('month:' + month.key).text(month.label));
+            });
+            select.append($('<option>').val('custom').text("{{ trans('lang.booking_history_period_custom') }}"));
+            periodsPopulated = true;
+        }
+
+        function withinBookingPeriod(booking) {
+            if (!bookingPeriodFrom && !bookingPeriodTo) {
+                return true;
+            }
+            var date = getBookingDate(booking);
+            if (!date) {
+                return true;
+            }
+            if (bookingPeriodFrom && date < bookingPeriodFrom) { return false; }
+            if (bookingPeriodTo && date > bookingPeriodTo) { return false; }
+            return true;
+        }
+
+        function setBookingPeriodSummary(label) {
+            bookingPeriodLabel = label || '';
+            $('#booking_period_summary').text(label
+                ? "{{ trans('lang.booking_history_period_showing') }}".replace(':period', label)
+                : '');
+        }
         $(document).on('click', '.new_booking_list', function() {
             getNewBookings();
         });
@@ -372,6 +486,7 @@
                     }
                     try {
                         const querySnapshot = await refVar.get();
+                        populateBookingPeriods(querySnapshot);
                         if (querySnapshot.empty) {
                             $('.total_count').text(0);
                             $('#data-table_processing').hide();
@@ -385,9 +500,13 @@
                         }
                         let records = [];
                         filteredRecords = [];
+                        totalFilteredBookingAmount = 0;
                         await Promise.all(querySnapshot.docs.map(async (doc) => {
                             let childData = doc.data();
                             childData.id = doc.id;
+                            if (!withinBookingPeriod(childData)) {
+                                return;
+                            }
                             var authorName = (childData.author != undefined) ? (childData.author.firstName + ' ' + childData.author.lastName) : '';
                             childData.authorName = authorName ? authorName : '';
                             var price = buildHTMLProductstotal(childData);
@@ -410,6 +529,8 @@
                                 childData.bookingDateTime = childData.newScheduleDateTime;
                             }
                             childData.price = price ? price : 0.00;
+                            var rawPrice = parseFloat(String(price).replace(/[^0-9.]/g, '')) || 0;
+                            totalFilteredBookingAmount += rawPrice;
                             childData.serviceName = childData.provider.title;
                             if (searchValue) {
                                 var bookingDate = '';
@@ -478,7 +599,7 @@
                         });
                         const totalRecords = filteredRecords.length;
                         $('.total_count').text(totalRecords);
-                        const paginatedRecords = filteredRecords.slice(start, start + length);
+                        const paginatedRecords = (length === -1) ? filteredRecords : filteredRecords.slice(start, start + length);
                         const formattedRecords = await Promise.all(paginatedRecords.map(async (childData) => {
                             return await buildHTML(childData);
                         }));
@@ -525,6 +646,8 @@
                     }).remove();
                 }
             });
+            currentActiveTable = table;
+            currentActiveTableId = tableName;
         }
         async function buildHTML(val) {
             var html = [];
@@ -768,5 +891,132 @@
                         console.error('Unsupported format');
                     }
                 }
+
+        $(document).on('change', '#booking_period', function () {
+            var value = $(this).val();
+            $('#booking_period_custom').toggle(value === 'custom');
+
+            if (value === 'custom') {
+                return;
+            }
+
+            if (value === 'all') {
+                bookingPeriodFrom = null;
+                bookingPeriodTo = null;
+                setBookingPeriodSummary('');
+            } else {
+                var parts = value.replace('month:', '').split('-');
+                var year = parseInt(parts[0], 10);
+                var month = parseInt(parts[1], 10) - 1;
+                bookingPeriodFrom = new Date(year, month, 1, 0, 0, 0, 0);
+                bookingPeriodTo = new Date(year, month + 1, 0, 23, 59, 59, 999);
+                setBookingPeriodSummary($(this).find('option:selected').text());
+            }
+            if (currentActiveTable) {
+                currentActiveTable.draw();
+            }
+        });
+
+        $(document).on('click', '#booking_period_apply', function () {
+            var from = $('#booking_period_from').val();
+            var to = $('#booking_period_to').val();
+            if (!from && !to) {
+                alert("{{ trans('lang.booking_history_period_pick_dates') }}");
+                return;
+            }
+            bookingPeriodFrom = from ? new Date(from + 'T00:00:00') : null;
+            bookingPeriodTo = to ? new Date(to + 'T23:59:59') : null;
+            if (bookingPeriodFrom && bookingPeriodTo && bookingPeriodFrom > bookingPeriodTo) {
+                alert("{{ trans('lang.booking_history_period_bad_range') }}");
+                return;
+            }
+            setBookingPeriodSummary([from, to].filter(Boolean).join(' - '));
+            if (currentActiveTable) {
+                currentActiveTable.draw();
+            }
+        });
+
+        $(document).on('click', '#booking_history_print', function () {
+            if (!currentActiveTable) {
+                return;
+            }
+            $('#print_provider').text(currentProviderTitle || 'Provider');
+            $('#print_period').text(bookingPeriodLabel !== ''
+                ? bookingPeriodLabel
+                : "{{ trans('lang.booking_history_period_all') }}");
+
+            var now = new Date();
+            $('#print_generated').text(now.toDateString() + ' ' + now.toLocaleTimeString());
+            $('#print_total_bookings').text($('.total_count').text() || '0');
+
+            var formattedTotal = currencyAtRight 
+                ? totalFilteredBookingAmount.toFixed(decimal_degits) + '' + currentCurrency 
+                : currentCurrency + '' + totalFilteredBookingAmount.toFixed(decimal_degits);
+            $('#print_total_amount').text(formattedTotal);
+
+            var currentLen = currentActiveTable.page.len();
+            currentActiveTable.page.len(-1).draw();
+            setTimeout(function () {
+                window.print();
+                currentActiveTable.page.len(currentLen).draw();
+            }, 500);
+        });
     </script>
 @endsection
+
+<style>
+    .order-print-only { display: none; }
+
+    @media print {
+        header, nav, footer, .left-sidebar, .topbar, .navbar, .page-titles,
+        .breadcrumb, #booking_period_card, .admin-top-section, .nav-pills,
+        .dataTables_length, .dataTables_filter, .dropdown, .custom-export-btn,
+        .dataTables_info, .dataTables_paginate, #data-table_processing,
+        .card-header, .action-btn, th:last-child, td:last-child,
+        .sidebar-footer { display: none !important; }
+
+        .tab-pane:not(.active) { display: none !important; }
+        .tab-pane.active { display: block !important; }
+
+        .order-print-only { display: block !important; }
+
+        .page-wrapper { margin-left: 0 !important; padding: 0 !important; }
+        .container-fluid { padding: 0 !important; }
+        .card, .card-body, .table-list, .table-responsive {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+        }
+
+        body {
+            background: #fff !important;
+            font-size: 10pt;
+            color: #000 !important;
+        }
+
+        table.dataTable {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        table.dataTable th, table.dataTable td {
+            border: 1px solid #ccc !important;
+            padding: 6px 8px !important;
+        }
+
+        table.dataTable tr {
+            page-break-inside: avoid;
+        }
+
+        .order_placed, .order_assigned, .order_ongoing, .order_accept, .order_rejected, .order_completed {
+            color: #000 !important;
+        }
+
+        a {
+            text-decoration: none !important;
+            color: #000 !important;
+        }
+    }
+</style>

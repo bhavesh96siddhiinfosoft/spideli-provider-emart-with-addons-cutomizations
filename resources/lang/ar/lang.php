@@ -802,7 +802,20 @@ return [
     'account_exists_email' => 'لديك بالفعل حساب مرتبط بهذا البريد الإلكتروني',
     'no_reviews_found' => 'لا توجد مراجعات',
     'go' => 'اذهب',
-
-
+    'booking_history_period' => 'عرض الحجوزات من',
+    'booking_history_period_all' => 'كل الأوقات',
+    'booking_history_period_custom' => 'اختر التواريخ...',
+    'booking_history_period_apply' => 'تطبيق',
+    'booking_history_period_showing' => 'المعروض: :period',
+    'booking_history_period_pick_dates' => 'يرجى اختيار تاريخ البداية أو تاريخ النهاية أو كليهما.',
+    'booking_history_period_bad_range' => 'تاريخ البداية بعد تاريخ النهاية.',
+    'booking_history_print' => 'طباعة',
+    'booking_history_print_title' => 'سجل الحجوزات',
+    'booking_history_print_period' => 'الفترة',
+    'booking_history_print_generated' => 'تمت الطباعة في',
+    'booking_history_print_none' => 'لا توجد حجوزات في هذه الفترة.',
+    'total_bookings' => 'إجمالي الحجوزات',
+    'total_amount' => 'المبلغ الإجمالي',
 ];
 ?>
+
