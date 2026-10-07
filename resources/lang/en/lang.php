@@ -811,7 +811,7 @@ return [
     'booking_history_period_showing' => 'Showing: :period',
     'booking_history_period_pick_dates' => 'Please choose a start date, an end date, or both.',
     'booking_history_period_bad_range' => 'The start date is after the end date.',
-    'booking_history_print' => 'Print',
+    'booking_history_print' => 'Export PDF / Print',
     'booking_history_print_title' => 'Bookings history',
     'booking_history_print_period' => 'Period',
     'booking_history_print_generated' => 'Printed on',

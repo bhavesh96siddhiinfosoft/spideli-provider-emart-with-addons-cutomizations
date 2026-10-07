@@ -809,7 +809,7 @@ return [
     'booking_history_period_showing' => 'المعروض: :period',
     'booking_history_period_pick_dates' => 'يرجى اختيار تاريخ البداية أو تاريخ النهاية أو كليهما.',
     'booking_history_period_bad_range' => 'تاريخ البداية بعد تاريخ النهاية.',
-    'booking_history_print' => 'طباعة',
+    'booking_history_print' => 'تصدير PDF / طباعة',
     'booking_history_print_title' => 'سجل الحجوزات',
     'booking_history_print_period' => 'الفترة',
     'booking_history_print_generated' => 'تمت الطباعة في',
