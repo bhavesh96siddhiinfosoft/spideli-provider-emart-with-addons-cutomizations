@@ -50,6 +50,18 @@
                                         <input type="date" id="booking_period_to" class="form-control w-auto mr-2 mb-0">
                                         <button type="button" id="booking_period_apply" class="btn btn-primary btn-sm mr-2">{{ trans('lang.booking_history_period_apply') }}</button>
                                     </div>
+                                    {{-- Point 72: export one status, or all of them --}}
+                                    <label class="mb-0 mr-2 font-weight-bold" for="booking_status_filter">{{ trans('lang.booking_history_status') }}</label>
+                                    <select id="booking_status_filter" class="form-control w-auto mr-2 mb-0">
+                                        <option value="">{{ trans('lang.booking_history_status_all') }}</option>
+                                        <option value="Order Placed">Order Placed</option>
+                                        <option value="Order Accepted">Order Accepted</option>
+                                        <option value="Order Assigned">Order Assigned</option>
+                                        <option value="Order Ongoing">Order Ongoing</option>
+                                        <option value="Order Completed">Order Completed</option>
+                                        <option value="Order Cancelled">Order Cancelled</option>
+                                        <option value="Order Rejected">Order Rejected</option>
+                                    </select>
                                     <span id="booking_period_summary" class="text-muted small ml-auto mr-2"></span>
                                     <button type="button" id="booking_history_print" class="btn btn-outline-primary btn-sm">
                                         <i class="mdi mdi-printer mr-1"></i>{{ trans('lang.booking_history_print') }}
@@ -63,6 +75,7 @@
                             <h3 class="mb-1">{{ trans('lang.booking_history_print_title') }}</h3>
                             <p class="mb-0 small"><strong>{{ trans('lang.service_provider') }}:</strong> <span id="print_provider"></span></p>
                             <p class="mb-0 small"><strong>{{ trans('lang.booking_history_print_period') }}:</strong> <span id="print_period"></span></p>
+                            <p class="mb-0 small"><strong>{{ trans('lang.booking_history_print_status') }}:</strong> <span id="print_status"></span></p>
                             <p class="mb-0 small"><strong>{{ trans('lang.total_bookings') }}:</strong> <span id="print_total_bookings"></span> | <strong>{{ trans('lang.total_amount') }}:</strong> <span id="print_total_amount"></span></p>
                             <p class="mb-2 small"><strong>{{ trans('lang.booking_history_print_generated') }}:</strong> <span id="print_generated"></span></p>
                             <hr class="mt-2 mb-2">
@@ -84,6 +97,12 @@
                             <li class="nav-item">
                                 <a class="nav-link canceled_booking_list" data-toggle="pill" href="#canceled_booking_list" role="tab">{{ trans('lang.canceled') }}</a>
                             </li>
+                            {{-- Point 72: every booking, whatever its status - the
+                                 only tab where "export one status, or all" can
+                                 mean ALL. --}}
+                            <li class="nav-item">
+                                <a class="nav-link all_booking_list" data-toggle="pill" href="#all_booking_list" role="tab">{{ trans('lang.all_bookings') }}</a>
+                            </li>
                         </ul>
                         <div class="card border">
                             <div class="card-header d-flex justify-content-between align-items-center border-0">
@@ -98,6 +117,35 @@
                             </div>
                             <div class="card-body">
                                 <div class="tab-content">
+                                    <div class="tab-pane" id="all_booking_list" role="tabpanel">
+                                        <div class="table-responsive m-t-10">
+                                            <div class="dropdown text-right">
+                                                <button class="btn btn-outline-primary dropdown-toggle custom-export-btn" type="button" id="exportDropdownAll" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="mdi mdi-cloud-download"></i> {{ trans('lang.export_as') }}
+                                                </button>
+                                                <ul class="dropdown-menu " aria-labelledby="exportDropdownAll">
+                                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportBookingData('all_bookings','excel')">{{ trans('lang.export_excel') }}</a></li>
+                                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportBookingData('all_bookings','pdf')">{{ trans('lang.export_pdf') }}</a></li>
+                                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportBookingData('all_bookings','csv')">{{ trans('lang.export_csv') }}</a></li>
+                                                </ul>
+                                            </div>
+                                            <table id="allBookingTable" class="display nowrap table table-hover table-striped table-bordered table table-striped" cellspacing="0" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{{ trans('lang.booking_id') }}</th>
+                                                        <th>{{ trans('lang.order_user_id') }}</th>
+                                                        <th>{{ trans('lang.status') }}</th>
+                                                        <th>{{ trans('lang.amount') }}</th>
+                                                        <th>{{ trans('lang.booking_date') }}</th>
+                                                        <th>{{ trans('lang.created_at') }}</th>
+                                                        <th>{{ trans('lang.service') }}</th>
+                                                        <th>{{ trans('lang.actions') }}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="all_bookings_row"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                     <div class="tab-pane" id="new_booking_list" role="tabpanel">
                                         <div class="table-responsive m-t-10">
                                             <div class="dropdown text-right">
@@ -279,6 +327,9 @@
         var upcomingBookingRef = database.collection('provider_orders').where('provider.author', "==", provider_id).where('status', 'in', ['Order Accepted', 'Order Assigned']).where('newScheduleDateTime', '>=', endTimestamp);
         var completedBookingRef = database.collection('provider_orders').where('provider.author', "==", provider_id).where('status', '==', 'Order Completed').orderBy('createdAt', 'desc');
         var cancelBookingRef = database.collection('provider_orders').where('provider.author', "==", provider_id).where('status', 'in', ['Order Cancelled', 'Order Rejected']).orderBy('createdAt', 'desc');
+        /* Point 72 - every booking. Equality filters only, so no new index;
+           the table sorts on the page. */
+        var allBookingRef = database.collection('provider_orders').where('provider.author', "==", provider_id);
         var section_id = '<?php if (@$_COOKIE['ondemand_section_id']) {
             echo @$_COOKIE['ondemand_section_id'];
         } else {
@@ -290,6 +341,7 @@
             upcomingBookingRef = upcomingBookingRef.where('sectionId', '==', section_id);
             completedBookingRef = completedBookingRef.where('sectionId', '==', section_id);
             cancelBookingRef = cancelBookingRef.where('sectionId', '==', section_id);
+            allBookingRef = allBookingRef.where('sectionId', '==', section_id);
         }
         var orderStatus = '<?php if (isset($_GET['status'])) {
             echo $_GET['status'];
@@ -339,6 +391,18 @@
                 return booking.scheduleDateTime.toDate();
             }
             return null;
+        }
+
+        /* ---- Point 72: export by booking status ----------------------------
+         * Point 53 exported every booking of the period. The client asked to
+         * choose ONE status, or all. The list, the totals, the print and the
+         * Excel / PDF / CSV exports all follow this choice, like the period.
+         * The other tabs are each a group of statuses, so choosing a status
+         * opens All bookings, where every status is present. */
+        var bookingStatusFilter = '';
+
+        function withinBookingStatus(booking) {
+            return !bookingStatusFilter || booking.status === bookingStatusFilter;
         }
 
         function populateBookingPeriods(snapshots) {
@@ -403,6 +467,9 @@
         $(document).on('click', '.canceled_booking_list', function() {
             getCancelBookings();
         });
+        $(document).on('click', '.all_booking_list', function() {
+            getAllBookings();
+        });
         $(document).ready(function() {
             $(document.body).on('click', '.redirecttopage', function() {
                 var url = $(this).attr('data-url');
@@ -466,6 +533,9 @@
         function getCancelBookings() {
             resetDataTable('#cancelBookingTable', cancelBookingRef);
         }
+        function getAllBookings() {
+            resetDataTable('#allBookingTable', allBookingRef);
+        }
         function mainDataTable(tableName, refVar) {
             jQuery("#data-table_processing").show();
             const table = $(tableName).DataTable({
@@ -505,6 +575,9 @@
                             let childData = doc.data();
                             childData.id = doc.id;
                             if (!withinBookingPeriod(childData)) {
+                                return;
+                            }
+                            if (!withinBookingStatus(childData)) {
                                 return;
                             }
                             var authorName = (childData.author != undefined) ? (childData.author.firstName + ' ' + childData.author.lastName) : '';
@@ -892,6 +965,15 @@
                     }
                 }
 
+        $(document).on('change', '#booking_status_filter', function () {
+            bookingStatusFilter = $(this).val() || '';
+            if (bookingStatusFilter && currentActiveTableId !== '#allBookingTable') {
+                $('.all_booking_list').trigger('click');
+            } else if (currentActiveTable) {
+                currentActiveTable.draw();
+            }
+        });
+
         $(document).on('change', '#booking_period', function () {
             var value = $(this).val();
             $('#booking_period_custom').toggle(value === 'custom');
@@ -941,6 +1023,7 @@
                 return;
             }
             $('#print_provider').text(currentProviderTitle || 'Provider');
+            $('#print_status').text(bookingStatusFilter || "{{ trans('lang.booking_history_status_all') }}");
             $('#print_period').text(bookingPeriodLabel !== ''
                 ? bookingPeriodLabel
                 : "{{ trans('lang.booking_history_period_all') }}");

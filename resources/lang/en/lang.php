@@ -818,6 +818,10 @@ return [
     'booking_history_print_none' => 'No bookings in this period.',
     'total_bookings' => 'Total Bookings',
     'total_amount' => 'Total Amount',
+    'booking_history_status' => 'Status',
+    'booking_history_status_all' => 'All statuses',
+    'booking_history_print_status' => 'Status',
+    'all_bookings' => 'All bookings',
 ];  
 ?>
 

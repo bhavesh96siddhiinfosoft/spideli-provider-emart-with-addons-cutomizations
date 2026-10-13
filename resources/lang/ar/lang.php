@@ -816,6 +816,10 @@ return [
     'booking_history_print_none' => 'لا توجد حجوزات في هذه الفترة.',
     'total_bookings' => 'إجمالي الحجوزات',
     'total_amount' => 'المبلغ الإجمالي',
+    'booking_history_status' => 'الحالة',
+    'booking_history_status_all' => 'كل الحالات',
+    'booking_history_print_status' => 'الحالة',
+    'all_bookings' => 'كل الحجوزات',
 ];
 ?>
 
