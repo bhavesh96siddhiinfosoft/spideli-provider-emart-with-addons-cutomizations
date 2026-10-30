@@ -819,9 +819,7 @@
                     $('#order_status_div').hide();
                     $('.save_order_btn').hide();
                 }
-                if (order.extraCharges != '') {
-                    $("#extra_charge_div").hide();
-                }
+                /* Point 81: no longer hidden once a booking has a charge - more can be added. */
                 var price = 0;
                 if (order.provider.photos && order.provider.photos.length) {
                     $('.service-img').attr('src', order.provider.photos[0]);
@@ -894,6 +892,16 @@
             }
             return h;
         }
+        /* Point 81: the words for the extra-charge rows (extraChargesHtml, layouts/app). */
+        var extraChargeLabels = {
+            charge: {!! json_encode(trans('lang.extra_charge_default')) !!},
+            paid: {!! json_encode(trans('lang.extra_charge_paid')) !!},
+            pending: {!! json_encode(trans('lang.extra_charge_pending')) !!},
+            total: {!! json_encode(trans('lang.extra_charges_total')) !!},
+            toPay: {!! json_encode(trans('lang.extra_charges_to_pay')) !!},
+            showTime: true
+        };
+
         async function callWalletTransaction(status) {
             var orderStatus = status;
             var date = firebase.firestore.FieldValue.serverTimestamp();
@@ -1116,24 +1124,24 @@
                 $('#worker_list_div').hide();
             }
         })
-        $('#extra-charge-btn').on('click', function() {
-            extraCharges = $('#extra_charge_amount').val(); // do not add var keyword before extraCharges it was defined globally
+        /* Point 81: as many charges as the job needs - appended to the booking's
+         * list in one transaction (addExtraCharge, layouts/app), never replacing
+         * the one before. Amount above 0 (a comma is a decimal point). */
+        $('#extra-charge-btn').on('click', function () {
+            var amount = extraChargeAmount($('#extra_charge_amount').val());
             var extraChargeDesc = $('#extra_charge_desc').val();
-            if (extraCharges == '') {
-                $('#add_extra_charge_err').html('{{ trans('lang.add_extra_charge_err') }}');
+            if (!(amount > 0)) {
+                $('#add_extra_charge_err').html('{{trans("lang.add_extra_charge_err")}}');
                 return false;
             }
-            /*if (priceUnit == 'Hourly') {
-                extraChargePaymentStatus = true; // do not add var keyword before extraChargePaymentStatus it was defined globally
-            } else {*/
+            var $btn = $(this).prop('disabled', true);
             extraChargePaymentStatus = false; // do not add var keyword before extraChargePaymentStatus it was defined globally
-            database.collection('provider_orders').doc(id).update({
-                'extraCharges': extraCharges,
-                'extraPaymentStatus': extraChargePaymentStatus,
-                'extraChargesDescription': extraChargeDesc
-            }).then(function(result) {
+            addExtraCharge(id, amount, extraChargeDesc).then(function () {
                 callAjax('Extra Charges');
-            })
+            }).catch(function (error) {
+                $btn.prop('disabled', false);
+                $('#add_extra_charge_err').html(error.message || String(error));
+            });
         });
         $('#add-otp-btn').on('click', function() {
             otp = $('#otp').val();
@@ -1247,12 +1255,15 @@
                         alert('{{ trans('lang.stop_the_timer') }}');
                     }
                 } else {
-                    if (extraCharges != '' && extraCharges != null && extraChargePaymentStatus == false) {
-                        alert('{{ trans('lang.extra_charges_payment_pending') }}');
-                        return false;
-                    } else {
-                        $('#addOtpModal').modal('show');
-                    }
+                    /* Point 81: any charge still unpaid holds the completion - read
+                       fresh, a worker may have just added one. */
+                    database.collection('provider_orders').doc(id).get().then(function (fresh) {
+                        if (unpaidExtraChargesTotal(fresh.data()) > 0) {
+                            alert('{{ trans('lang.extra_charges_payment_pending') }}');
+                        } else {
+                            $('#addOtpModal').modal('show');
+                        }
+                    });
                 }
             }
         })
@@ -1391,7 +1402,7 @@
             var adminCommissionType = snapshotsProducts.adminCommissionType;
             var discount = snapshotsProducts.discount;
             var couponCode = snapshotsProducts.couponCode;
-            extraCharges = snapshotsProducts.extraCharges;
+            extraCharges = extraChargesTotal(snapshotsProducts);   // point 81: every charge
             var notes = snapshotsProducts.notes;
             var status = snapshotsProducts.status;
             var products = snapshotsProducts;
@@ -1503,16 +1514,13 @@
                     }
                     html = html + '<tr><td class="label"><small>{{ trans('lang.admin_commission') }} ' + adminCommHtml + '</small> </td><td style="color:red"><small>( ' + adminCommission + ' )</small></td></tr>';
                 }
-                if (extraCharges && extraCharges != null && extraCharges != undefined && extraCharges > 0) {
-                    if (currencyAtRight) {
-                        extraCharges = parseFloat(extraCharges).toFixed(decimal_degits) + "" + currentCurrency;
-                    } else {
-                        extraCharges = currentCurrency + "" + parseFloat(extraCharges).toFixed(decimal_degits);
-                    }
-                    html = html + '<tr><td class="label">{{ trans('lang.extra_charges') }}</td><td class="total_price_val">' + extraCharges + '</td></tr>';
-                }
-                if (snapshotsProducts.hasOwnProperty('extraChargesDescription') && snapshotsProducts.extraChargesDescription != null && snapshotsProducts.extraChargesDescription != '') {
-                    html = html + '<tr><td class="label">{{ trans('lang.extra_charges_note') }}</td><td class="total_price_val">' + snapshotsProducts.extraChargesDescription + '</td></tr>';
+                if (extraCharges > 0) {
+                    /* Point 81: one row per charge (paid or pending, when added), then
+                       the total. The description is on each row now. */
+                    html = html + '<tr><td class="label">{{ trans('lang.extra_charges') }}</td><td>'
+                        + extraChargesHtml(snapshotsProducts, function (a) {
+                            return currencyAtRight ? parseFloat(a).toFixed(decimal_degits) + currentCurrency : currentCurrency + parseFloat(a).toFixed(decimal_degits);
+                        }, extraChargeLabels) + '</td></tr>';
                 }
             }
             html += '<tr><td class="seprater" colspan="2"><hr></td></tr>';

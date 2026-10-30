@@ -822,6 +822,11 @@ return [
     'booking_history_status_all' => 'All statuses',
     'booking_history_print_status' => 'Status',
     'all_bookings' => 'All bookings',
+    'extra_charge_default' => 'Extra charge',
+    'extra_charge_paid' => 'Paid',
+    'extra_charge_pending' => 'Pending',
+    'extra_charges_total' => 'Total extra charges',
+    'extra_charges_to_pay' => 'Still to pay',
 ];  
 ?>
 

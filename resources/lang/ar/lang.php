@@ -820,6 +820,11 @@ return [
     'booking_history_status_all' => 'كل الحالات',
     'booking_history_print_status' => 'الحالة',
     'all_bookings' => 'كل الحجوزات',
+    'extra_charge_default' => 'رسوم إضافية',
+    'extra_charge_paid' => 'مدفوعة',
+    'extra_charge_pending' => 'قيد الانتظار',
+    'extra_charges_total' => 'إجمالي الرسوم الإضافية',
+    'extra_charges_to_pay' => 'المتبقي للدفع',
 ];
 ?>
 
