@@ -442,6 +442,7 @@
         var orderPaymentMethod = '';
         var orderCustomerId = '';
         var orderPayableAmount = 0;
+        var pscBase = 0, pscHourly = false;   // point 87
         var extraCharges = '';
         var manname = '';
         var decimal_degits = 0;
@@ -902,6 +903,17 @@
             showTime: true
         };
 
+        /* Point 87: taken after the provider's credit at Accept. An hourly
+         * booking's price is known only at Pay Now, where the website takes it. */
+        function pscTakeForBooking() {
+            if (pscHourly) {
+                return Promise.resolve(0);
+            }
+            return takeProductServiceCommission({ collection: 'provider_orders', orderId: id, base: pscBase,
+                userId: providerAuthor, transactionUser: 'provider', serviceType: 'ondemand-service',
+                wallets: ['users/' + providerAuthor] });
+        }
+
         async function callWalletTransaction(status) {
             var orderStatus = status;
             var date = firebase.firestore.FieldValue.serverTimestamp();
@@ -948,6 +960,7 @@
                                 database.collection('users').doc(providerAuthor).update({
                                     'wallet_amount': parseFloat(newProviderWallet),
                                 }).then(async function(result) {
+                                    await pscTakeForBooking();
                                     callAjax(orderStatus);
                                 })
                             } else {
@@ -969,6 +982,7 @@
                             database.collection('users').doc(providerAuthor).update({
                                 'wallet_amount': parseFloat(newProviderWallet),
                             }).then(async function(result) {
+                                await pscTakeForBooking();
                                 callAjax(orderStatus);
                             })
                         } else {
@@ -1415,6 +1429,8 @@
             var price = sub_total;
             var priceUnit = '';
             sub_total = parseFloat(val.quantity) * sub_total;
+            pscBase = Math.max(0, sub_total - (parseFloat(discount) || 0));   // point 87: price after discounts
+            pscHourly = val.provider.priceUnit == 'Hourly';
             total_price += parseFloat(sub_total);
             if (currencyAtRight) {
                 sub_total = parseFloat(sub_total).toFixed(decimal_degits) + "" + currentCurrency;
@@ -1512,6 +1528,7 @@
                         adminCommission = currentCurrency + "" + parseFloat(adminCommission_val).toFixed(decimal_degits);
                     }
                     html = html + '<tr><td class="label"><small>{{ trans('lang.admin_commission') }} ' + adminCommHtml + '</small> </td><td style="color:red"><small>( ' + adminCommission + ' )</small></td></tr>';
+                    html = html + productServiceCommissionRow(snapshotsProducts, {!! json_encode(trans('lang.psc_title')) !!}, function (a) { return currencyAtRight ? parseFloat(a).toFixed(decimal_degits) + currentCurrency : currentCurrency + parseFloat(a).toFixed(decimal_degits); });   // point 87
                 }
                 if (extraCharges > 0) {
                     /* Point 81: one row per charge (paid or pending, when added), then
