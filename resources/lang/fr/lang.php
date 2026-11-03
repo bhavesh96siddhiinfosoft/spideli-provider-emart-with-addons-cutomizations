@@ -867,6 +867,7 @@ return [
     'task_role_customer' => 'Client',
     'task_role_provider' => 'Prestataire',
     'task_role_worker' => 'Employé',
+    'tasks_payment_pending' => 'Le client n\'a pas encore payé toutes les tâches.',
 ];  
 ?>
 

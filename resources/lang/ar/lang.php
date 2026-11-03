@@ -865,6 +865,7 @@ return [
     'task_role_customer' => 'العميل',
     'task_role_provider' => 'مقدم الخدمة',
     'task_role_worker' => 'العامل',
+    'tasks_payment_pending' => 'لم يدفع العميل كل المهام بعد.',
 ];
 ?>
 

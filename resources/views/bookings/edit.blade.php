@@ -1275,6 +1275,8 @@
                     database.collection('provider_orders').doc(id).get().then(function (fresh) {
                         if (unpaidExtraChargesTotal(fresh.data()) > 0) {
                             alert('{{ trans('lang.extra_charges_payment_pending') }}');
+                        } else if ((parseFloat(fresh.data().tasksTotal) || 0) - (parseFloat(fresh.data().tasksPaid) || 0) > 0.004) {
+                            alert({!! json_encode(trans('lang.tasks_payment_pending')) !!});   // point 88
                         } else {
                             $('#addOtpModal').modal('show');
                         }

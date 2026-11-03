@@ -867,6 +867,7 @@ return [
     'task_role_customer' => 'Customer',
     'task_role_provider' => 'Provider',
     'task_role_worker' => 'Worker',
+    'tasks_payment_pending' => 'The customer has not paid all the tasks yet.',
 ];  
 ?>
 
