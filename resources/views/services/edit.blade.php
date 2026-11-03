@@ -128,6 +128,14 @@
                                     <label class="col-3 control-label" for="item_publish">{{ trans('lang.item_publish') }}</label>
                                 </div>
                             </div>
+                            {{-- Point 88: this service's bookings are jobs made of tasks. --}}
+                            <div class="form-group row width-50">
+                                <div class="form-check">
+                                    <input type="checkbox" id="tasks_enabled">
+                                    <label class="col-8 control-label" for="tasks_enabled">{{ trans('lang.service_tasks_enabled') }}</label>
+                                    <div class="form-text text-muted">{{ trans('lang.service_tasks_enabled_help') }}</div>
+                                </div>
+                            </div>
 
                             <div class="form-group row width-100">
                                 <label class="col-3 control-label">{{ trans('lang.item_description') }}</label>
@@ -251,6 +259,7 @@
                 if (serviceData.publish) {
                     $("#item_publish").prop('checked', true);
                 }
+                $("#tasks_enabled").prop('checked', serviceData.tasksEnabled === true);   // point 88
 
                 if (serviceData.photos.length > 0) {
                     photos = serviceData.photos;
@@ -474,6 +483,7 @@
                             "address": address,
                             'description': description,
                             'publish': itemPublish,
+                            'tasksEnabled': $("#tasks_enabled").is(":checked"),   // point 88
                             'days': days,
                             'endTime': endTime,
                             'startTime': startTime,

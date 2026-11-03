@@ -220,6 +220,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @include('bookings.partials.tasks')
                             <div class="order_detail-review mt-4">
                                 <div class="rental-review ">
                                     <div class="card">
@@ -829,6 +830,7 @@
                 }
                 if (order.hasOwnProperty('provider') && order.provider.hasOwnProperty('id')) {
                     var providerServiceDetail = await getProviderServiceDetail(order.provider.id);
+                    initBookingTasks(order, providerServiceDetail || {});   // point 88
                     if (providerServiceDetail == '' || providerServiceDetail == undefined) {
                         $('.service-title').html("{{ trans('lang.unknown') }}");
                         $('.service_details').removeClass('redirecttopage');
@@ -1657,4 +1659,5 @@
             clearInterval(timerInterval);
         }
     </script>
+    @include('bookings.partials.tasks_script')
 @endsection
