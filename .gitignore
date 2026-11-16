@@ -21,3 +21,4 @@ yarn-error.log
 
 # local archives
 *.zip
+commit-msg.txt
