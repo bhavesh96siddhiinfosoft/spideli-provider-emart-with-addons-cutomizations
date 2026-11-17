@@ -39,6 +39,8 @@ Route::post('process-mercadopago', [App\Http\Controllers\SubscriptionController:
 Route::get('success', [App\Http\Controllers\SubscriptionController::class, 'success'])->name('success');
 // #92 MyCoolPay: the customer comes back here (forwarded by the website's MyCoolPay return page).
 Route::get('mycoolpay/return/{result}', [App\Http\Controllers\MyCoolPayController::class, 'back'])->where('result', 'success|cancel|failure')->name('mycoolpay.return');
+// #92 MyPVIT: the customer comes back here (forwarded by the website's /mypvit/return, after its /mypvit/handoff).
+Route::get('mypvit/return/{result}', [App\Http\Controllers\MyPVitController::class, 'back'])->where('result', 'success|failure')->name('mypvit.return');
 Route::get('failed', [App\Http\Controllers\SubscriptionController::class, 'failed'])->name('failed');
 Route::get('notify', [App\Http\Controllers\SubscriptionController::class, 'notify'])->name('notify');
 
