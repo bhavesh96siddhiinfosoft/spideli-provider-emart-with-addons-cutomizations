@@ -279,6 +279,20 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        {{-- #92 Sebpay Guinée: shown below when enabled, with its keys, for a store paying in GNF --}}
+                                        <div class="col-md-4 d-none" id="sebpay_gn_box">
+                                            <div class="pay-method-box d-flex align-items-center">
+                                                <div class="pay-method-icon">
+                                                    <i class="fa fa-mobile" style="font-size:28px"></i>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input type="radio" id="sebpay_gn" name="payment_method" value="sebpay_gn">
+                                                    {{ trans('lang.sebpay_gn') }} <label class="control-label mb-0" for="sebpay_gn"></label>
+                                                </div>
+                                                <div class="input-box">
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="col-md-4 d-none" id="xendit_box">
                                             <div class="pay-method-box d-flex align-items-center">
                                                 <div class="pay-method-icon">
@@ -758,6 +772,28 @@
                 console.error('Sebpay settings could not be read', e);
             });
 
+            /* #92 Sebpay Guinée: offered when enabled, with its keys, for a store paying in the account's currency. */
+            database.collection('settings').doc('sebpay_gn_settings').get().then(async function (doc) {
+                var d = doc.exists ? doc.data() : null;
+                if (!(d && (d.isEnabled === true || d.enable === true) && d.publicKey && d.secretKey)) {
+                    return;
+                }
+                var want = String(d.currency || 'GNF').toUpperCase();
+                try {
+                    var snap = await refCurrency.get();
+                    var cur = snap.docs.length ? snap.docs[0].data() : null;
+                    var code = cur && cur.code ? String(cur.code).toUpperCase() : '';
+                    if (code !== '' && code !== want) {
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Sebpay: currency unknown', e);
+                }
+                $("#sebpay_gn_box").removeClass('d-none');
+            }).catch(function (e) {
+                console.error('Sebpay settings could not be read', e);
+            });
+
             /* #92 MyPVIT: offered when enabled and set up, for a store paying in XAF. */
             database.collection('settings').doc('mypvit_settings').get().then(async function (doc) {
                 var d = doc.exists ? doc.data() : null;
@@ -1129,7 +1165,7 @@
                     }
                 });
 
-            } else if ((payment_method == "orangepay" || payment_method == "mycoolpay" || payment_method == "mypvit" || payment_method == "sebpay_cm")) {
+            } else if ((payment_method == "orangepay" || payment_method == "mycoolpay" || payment_method == "mypvit" || payment_method == "sebpay_cm" || payment_method == "sebpay_gn")) {
 
                 var orangepay_enable = $("#orangepay_enable").val();
                 var orangepay_auth = $("#orangepay_auth").val();
