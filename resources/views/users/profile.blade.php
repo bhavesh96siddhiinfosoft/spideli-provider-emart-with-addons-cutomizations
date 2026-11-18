@@ -259,6 +259,10 @@
                         ownerphoto = user.profilePictureURL;
                         vendorOwnerPhoto = user.profilePictureURL;
                         $(".user_first_name").val(user.firstName);
+                        if (user.isDocumentVerify === true) {
+                            $(".page-titles h3.text-themecolor").find('.spideli-verified-badge').remove();
+                            $(".page-titles h3.text-themecolor").append(spideliVerifiedBadge(true));
+                        }
                         $(".user_last_name").val(user.lastName);
                         $(".user_email").val(user.email);
                         $(".user_phone").val(user.phoneNumber);

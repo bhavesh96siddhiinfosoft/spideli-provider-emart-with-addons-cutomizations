@@ -323,12 +323,15 @@
         id = val.id;
         var route1 = '{{route("workers.edit",":id")}}';
         route1 = route1.replace(':id', val.id);
+        var docRoute = '{{route("workers.documents",":id")}}';
+        docRoute = docRoute.replace(':id', val.id);
+        var verifiedBadge = spideliVerifiedBadge(val.isDocumentVerify === true);
         html.push('<td class="delete-all"><input type="checkbox" id="is_open_' + id + '" class="is_open" dataId="' + id + '"><label class="col-3 control-label"\n' +
             'for="is_open_' + id + '" ></label></td>');
         if (val.profilePictureURL == '' || val.profilePictureURL == null) {
-            html.push('<td><img class="rounded" style="width:50px" src="' + placeholderImage + '" alt="image"><span class="left_space">' + val.userName + '</span></td>');
+            html.push('<td><img class="rounded" style="width:50px" src="' + placeholderImage + '" alt="image"><span class="left_space">' + val.userName + verifiedBadge + '</span></td>');
         } else {    
-            html.push('<td><img onerror="this.onerror=null;this.src=\'' + placeholderImage + '\'" class="rounded" style="width:50px" src="' + val.profilePictureURL + '" alt="image"><span class="left_space">' + val.userName + '</span></td>');
+            html.push('<td><img onerror="this.onerror=null;this.src=\'' + placeholderImage + '\'" class="rounded" style="width:50px" src="' + val.profilePictureURL + '" alt="image"><span class="left_space">' + val.userName + verifiedBadge + '</span></td>');
         }
 
         html.push('<td>' + val.email + '</td>');
@@ -340,7 +343,8 @@
         }
         html.push('<td>'+ val.OnOff +'</td>');
         var action = '';
-        action = action + '<span class="action-btn"><a href="' + route1 + '"><i class="mdi mdi-lead-pencil"></i></a>';
+        action = action + '<span class="action-btn"><a href="' + docRoute + '" data-toggle="tooltip" title="{{ trans("lang.document_verification") }}"><i class="mdi mdi-file-document-outline"></i></a>';
+        action = action + '<a href="' + route1 + '"><i class="mdi mdi-lead-pencil"></i></a>';
         action = action + '<a id="' + val.id + '" class="do_not_delete" name="user-delete" href="javascript:void(0)"><i class="mdi mdi-delete"></i></a>';
         action = action + '</span>';
         html.push(action);

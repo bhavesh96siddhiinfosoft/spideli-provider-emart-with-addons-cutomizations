@@ -910,6 +910,19 @@ return [
     'task_role_provider' => 'مقدم الخدمة',
     'task_role_worker' => 'العامل',
     'tasks_payment_pending' => 'لم يدفع العميل كل المهام بعد.',
+    'verified' => 'مُوثَّق',
+    'worker_documents' => 'وثائق العامل',
+    'document_verification' => 'التحقق من الوثائق',
+    'document_name' => 'اسم الوثيقة',
+    'front_image' => 'الصورة الأمامية',
+    'back_image' => 'الصورة الخلفية',
+    'approved' => 'مقبول',
+    'rejected' => 'مرفوض',
+    'uploaded' => 'تم الرفع',
+    'document_nothing_uploaded' => 'لم يقم هذا العامل برفع أي وثائق بعد.',
+    'worker_not_found' => 'العامل غير موجود.',
+    'document_saved' => 'تم تحديث حالة الوثيقة.',
+    'document_save_failed' => 'تعذر حفظ حالة الوثيقة. يرجى المحاولة مرة أخرى.',
 ];
 ?>
 

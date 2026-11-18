@@ -34,4 +34,11 @@ class WorkersController extends Controller
     {
         return view("workers.edit")->with('id', $id);
     }
+
+    public function documents($id)
+    {
+        $exist = VendorUsers::where('user_id', Auth::id())->first();
+        $providerId = $exist ? $exist->uuid : '';
+        return view("workers.documents", ['id' => $id, 'providerId' => $providerId]);
+    }
 }

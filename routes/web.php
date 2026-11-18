@@ -76,6 +76,7 @@ Route::post('order-status-notification', [App\Http\Controllers\BookingController
 Route::get('/workers', [App\Http\Controllers\WorkersController::class, 'index'])->name('workers');
 Route::get('/workers/create', [App\Http\Controllers\WorkersController::class, 'create'])->name('workers.create');
 Route::get('/workers/edit/{id}', [App\Http\Controllers\WorkersController::class, 'edit'])->name('workers.edit');
+Route::get('/workers/documents/{id}', [App\Http\Controllers\WorkersController::class, 'documents'])->name('workers.documents');
 
 Route::get('/coupons', [App\Http\Controllers\CouponController::class, 'index'])->name('coupons');
 Route::get('/coupons/create', [App\Http\Controllers\CouponController::class, 'create'])->name('coupons.create');

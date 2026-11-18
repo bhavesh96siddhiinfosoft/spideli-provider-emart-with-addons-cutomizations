@@ -912,6 +912,19 @@ return [
     'task_role_provider' => 'Provider',
     'task_role_worker' => 'Worker',
     'tasks_payment_pending' => 'The customer has not paid all the tasks yet.',
+    'verified' => 'Verified',
+    'worker_documents' => 'Worker Documents',
+    'document_verification' => 'Document Verification',
+    'document_name' => 'Document Name',
+    'front_image' => 'Front Image',
+    'back_image' => 'Back Image',
+    'approved' => 'Approved',
+    'rejected' => 'Rejected',
+    'uploaded' => 'Uploaded',
+    'document_nothing_uploaded' => 'This worker has not uploaded any documents yet.',
+    'worker_not_found' => 'Worker not found.',
+    'document_saved' => 'Document status updated.',
+    'document_save_failed' => 'Could not save the document status. Please try again.',
 ];  
 ?>
 
