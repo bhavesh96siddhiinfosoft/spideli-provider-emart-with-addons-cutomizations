@@ -97,7 +97,20 @@ foreach ($countries as $keycountry => $valuecountry) {
                                     </div>
                                 </div>
                             </div>
-                            
+
+                        </div>
+
+                        {{-- Region, as in the store panel --}}
+                        <div class="form-group row width-50">
+                            <label class="col-3 control-label">{{trans('lang.region')}}<span class="required-field"></span></label>
+                            <div class="col-7 custom-dropdown">
+                                <select id="region_id" class="form-control">
+                                    <option value="">{{trans('lang.select_region')}}</option>
+                                </select>
+                                <div class="form-text text-muted">
+                                    {{ trans("lang.region_help") }}
+                                </div>
+                            </div>
                         </div>
 
 
@@ -267,6 +280,10 @@ foreach ($countries as $keycountry => $valuecountry) {
             placeholder: "{{trans('lang.select_country')}}",
             allowClear: true
         });
+        await loadRegions();
+        jQuery("#region_id").select2({
+            placeholder: "{{trans('lang.select_region')}}"
+        });
         if (loginType) {
             $("#hidden_loginType").val(loginType);
         }
@@ -315,7 +332,30 @@ foreach ($countries as $keycountry => $valuecountry) {
     // --- END OF DEFAULT COUNTRY LOGIC ---
     });
 
-   $(".create_vendor_btn").click(async function () {  
+
+    /* Region (as in the store panel): published regions only, sorted by name. Filtered and sorted here, because
+     * where('publish') with orderBy('name') would need a composite index. */
+    async function loadRegions() {
+        var snapshots = await database.collection('regions').get();
+        var regions = [];
+        snapshots.docs.forEach(function (doc) {
+            var region = doc.data();
+            if (region.publish !== true) {
+                return;
+            }
+            region.id = region.id || doc.id;
+            regions.push(region);
+        });
+        regions.sort(function (a, b) {
+            return (a.name || '').localeCompare(b.name || '');
+        });
+        regions.forEach(function (region) {
+            $('#region_id').append($("<option></option>").attr("value", region.id).text(region.name));
+        });
+        return regions;
+    }
+
+   $(".create_vendor_btn").click(async function () {    
         $(".error_top").hide();
 
         var latitude = parseFloat(0.01);
@@ -327,7 +367,8 @@ foreach ($countries as $keycountry => $valuecountry) {
         var password = $(".user_password").val();
         var phone = $('#phone').val();
         var countryCode = '+' + jQuery("#country_selector").val();
-        
+        var regionId = $("#region_id").val();
+
         var location = {'latitude': latitude, 'longitude': longitude};
         var user_name = userFirstName + " " + userLastName;
         var user_id = database.collection("tmp").doc().id;
@@ -380,6 +421,11 @@ foreach ($countries as $keycountry => $valuecountry) {
             $(".error_top").append("<p>{{trans('lang.enter_owners_phone')}}</p>");
             window.scrollTo(0, 0);
 
+        } else if (regionId == '' || regionId == null) {
+            $(".error_top").show();
+            $(".error_top").html("");
+            $(".error_top").append("<p>{{trans('lang.select_region_error')}}</p>");
+            window.scrollTo(0, 0);
         } else {
 
             jQuery("#data-table_processing").show();
@@ -402,7 +448,8 @@ foreach ($countries as $keycountry => $valuecountry) {
                         'reviewsCount':0,
                         'reviewsSum':0,
                         'section_id': '',
-                    }).then(async function () {  
+                        'regionId': regionId,
+                    }).then(async function () {    
                         var url = "{{route('setToken')}}";
                         $.ajax({
                             type: 'POST',
@@ -473,6 +520,7 @@ foreach ($countries as $keycountry => $valuecountry) {
                             'reviewsCount':0,
                             'reviewsSum':0,
                             'section_id': '',
+                            'regionId': regionId,
                         }).then(function (result) {
                             jQuery("#data-table_processing").hide();
                             autoApproveProvider.get().then(async function (snapshots) {

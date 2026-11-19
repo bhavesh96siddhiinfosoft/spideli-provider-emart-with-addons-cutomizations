@@ -896,4 +896,11 @@ return [
     'worker_not_found' => 'Employé introuvable.',
     'document_saved' => 'Statut du document enregistré.',
     'document_save_failed' => 'Impossible d\'enregistrer le statut du document. Veuillez réessayer.',
+    // provider region (before #114 step 2)
+    'region' => 'Région',
+    'select_region' => 'Sélectionner une région',
+    'region_help' => 'Sélectionnez la région dans laquelle vous proposez vos services.',
+    'select_region_error' => 'Veuillez sélectionner une région',
+    'region_profile_help' => 'Changer de région y déplace aussi vos services et vos employés.',
+    'region_missing_help' => 'Votre région n’est plus disponible. Veuillez en choisir une et enregistrer.',
 ];

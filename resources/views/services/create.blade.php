@@ -488,7 +488,7 @@
                                 jQuery("#data-table_processing").hide();
                                 return false;
                             }
-                            geoFirestore.collection('providers_services').doc(id).set({
+                            geoFirestore.collection('providers_services').doc(id).set(Object.assign({
                                 'title': name,
                                 'sectionId': section_id,
                                 'price': price,
@@ -523,7 +523,7 @@
                                 'subscriptionPlanId': subscriptionPlanId,
                                 'subscriptionExpiryDate': subscriptionExpiryDate,
                                 'subscriptionTotalOrders': subscriptionTotalOrders
-                            }).then(async function(result) {
+                            }, await spideliProviderRegionFields())).then(async function(result) {
                                 if (isSectionIdExist) {
                                     window.location.href = '{{ route('services') }}';
                                 } else {

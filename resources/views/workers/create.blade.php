@@ -228,7 +228,7 @@
                     
                     await storeImageData().then(async (IMG) => {
                         
-                            geoFirestore.collection('providers_workers').doc(user_id).set({
+                            geoFirestore.collection('providers_workers').doc(user_id).set(Object.assign({
                                 'firstName': userFirstName,
                                 'lastName': userLastName,
                                 'email': email,
@@ -248,7 +248,7 @@
                                 'online': false,
                                 coordinates: new firebase.firestore.GeoPoint(latitude, longitude),
 
-                            }).then(function (result) {
+                            }, await spideliProviderRegionFields())).then(function (result) {
                                 window.location.href = '{{ route("workers")}}';
                             });
                         

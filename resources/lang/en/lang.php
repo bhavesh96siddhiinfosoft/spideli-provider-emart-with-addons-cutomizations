@@ -925,6 +925,13 @@ return [
     'worker_not_found' => 'Worker not found.',
     'document_saved' => 'Document status updated.',
     'document_save_failed' => 'Could not save the document status. Please try again.',
+    // provider region (before #114 step 2)
+    'region' => 'Region',
+    'select_region' => 'Select Region',
+    'region_help' => 'Select the region you provide your services in.',
+    'select_region_error' => 'Please select a region',
+    'region_profile_help' => 'Changing your region also moves your services and workers to it.',
+    'region_missing_help' => 'Your region is no longer available. Please choose one and save.',
 ];  
 ?>
 

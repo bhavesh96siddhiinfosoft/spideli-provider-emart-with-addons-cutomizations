@@ -923,6 +923,13 @@ return [
     'worker_not_found' => 'العامل غير موجود.',
     'document_saved' => 'تم تحديث حالة الوثيقة.',
     'document_save_failed' => 'تعذر حفظ حالة الوثيقة. يرجى المحاولة مرة أخرى.',
+    // provider region (before #114 step 2)
+    'region' => 'المنطقة',
+    'select_region' => 'اختر المنطقة',
+    'region_help' => 'اختر المنطقة التي تقدم فيها خدماتك.',
+    'select_region_error' => 'الرجاء اختيار منطقة',
+    'region_profile_help' => 'تغيير منطقتك ينقل خدماتك وعمّالك إليها أيضاً.',
+    'region_missing_help' => 'منطقتك لم تعد متاحة. يرجى اختيار منطقة والحفظ.',
 ];
 ?>
 

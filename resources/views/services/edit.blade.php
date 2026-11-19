@@ -472,7 +472,7 @@
                 } else {
                     jQuery("#data-table_processing").show();
                     await storeImageData().then(async (IMG) => {
-                        geoFirestore.collection('providers_services').doc(Id).update({
+                        geoFirestore.collection('providers_services').doc(Id).update(Object.assign({
                             'title': name,
                             'price': price,
                             'disPrice': discount,
@@ -494,7 +494,7 @@
                                 'geohash' : encodeGeohash(latitude, longitude),
                                 'geopoint' : new firebase.firestore.GeoPoint(latitude, longitude)
                             }
-                        }).then(function(result) {
+                        }, await spideliProviderRegionFields())).then(function(result) {
                             window.location.href = '{{ route('services') }}';
                         });
                     }).catch(err => {

@@ -78,6 +78,22 @@
                                         </div>
                                     </div>
 
+                                    {{-- Region, as in the store panel: changing it also moves the provider's services and workers --}}
+                                    <div class="form-group row width-50">
+                                        <label class="col-3 control-label">{{ trans('lang.region') }}<span class="required-field"></span></label>
+                                        <div class="col-7">
+                                            <select id="region_id" class="form-control">
+                                                <option value="">{{ trans('lang.select_region') }}</option>
+                                            </select>
+                                            <div class="form-text text-danger region_missing" style="display:none;">
+                                                {{ trans('lang.region_missing_help') }}
+                                            </div>
+                                            <div class="form-text text-muted">
+                                                {{ trans('lang.region_profile_help') }}
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="form-group row width-50">
                                         <label class="col-3 control-label">{{trans('lang.user_profile_picture')}}</label>
                                         <div class="col-9">
@@ -266,6 +282,7 @@
                         $(".user_last_name").val(user.lastName);
                         $(".user_email").val(user.email);
                         $(".user_phone").val(user.phoneNumber);
+                        spideliShowProviderRegion(user.regionId || '');
                         var user_wallet = user.wallet_amount;
                         if (currencyAtRight) {
                             user_wallet = parseFloat(user_wallet).toFixed(decimal_degits) + "" + currentCurrency;
@@ -306,6 +323,59 @@
                 });
             });
         })
+        /* Region (as in the store panel). The saved region is kept in savedRegionId; a provider whose region
+         * no longer exists (deleted) sees an empty list and a prompt to choose one. */
+        var savedRegionId = '';
+        var regionsReady = loadProviderRegions();
+
+        async function loadProviderRegions() {
+            var snapshots = await database.collection('regions').get();
+            var regions = [];
+            snapshots.docs.forEach(function (doc) {
+                var region = doc.data();
+                if (region.publish !== true) {
+                    return;
+                }
+                region.id = region.id || doc.id;
+                regions.push(region);
+            });
+            regions.sort(function (a, b) {
+                return (a.name || '').localeCompare(b.name || '');
+            });
+            regions.forEach(function (region) {
+                $('#region_id').append($("<option></option>").attr("value", region.id).text(region.name));
+            });
+            return regions;
+        }
+
+        async function spideliShowProviderRegion(regionId) {
+            savedRegionId = regionId;
+            await regionsReady;
+            var known = regionId !== '' && $('#region_id option').filter(function () {
+                return $(this).val() === regionId;
+            }).length > 0;
+            $('#region_id').val(known ? regionId : '');
+            $('.region_missing').toggle(!known);
+        }
+
+        /* Moves the provider's services and workers to the region just saved, so customers in that region see
+         * them (every service is in its provider's region). Batches of 400 writes. */
+        async function spideliMoveProviderRegion(providerId, regionId) {
+            var refs = [];
+            var services = await database.collection('providers_services').where('author', '==', providerId).get();
+            services.docs.forEach(function (doc) { refs.push(doc.ref); });
+            var workers = await database.collection('providers_workers').where('providerId', '==', providerId).get();
+            workers.docs.forEach(function (doc) { refs.push(doc.ref); });
+            for (var i = 0; i < refs.length; i += 400) {
+                var batch = database.batch();
+                refs.slice(i, i + 400).forEach(function (ref) {
+                    batch.update(ref, {'regionId': regionId});
+                });
+                await batch.commit();
+            }
+            return refs.length;
+        }
+
         $(".change_user_password").click(function () {
             var userOldPassword = $(".user_old_password").val();
             var userNewPassword = $(".user_new_password").val();
@@ -361,6 +431,7 @@
             var userLastName = $(".user_last_name").val();
             var email = $(".user_email").val();
             var userPhone = $(".user_phone").val();
+            var regionId = $("#region_id").val();
 
 
 
@@ -383,6 +454,11 @@
                 $(".error_top").show();
                 $(".error_top").html("");
                 $(".error_top").append("<p>{{trans('lang.vendor_address_error')}}</p>");
+                window.scrollTo(0, 0);
+            } else if (regionId == '' || regionId == null) {
+                $(".error_top").show();
+                $(".error_top").html("");
+                $(".error_top").append("<p>{{ trans('lang.select_region_error') }}</p>");
                 window.scrollTo(0, 0);
             }
             else {
@@ -408,10 +484,20 @@
                     'phoneNumber': userPhone,
                     'profilePictureURL': ownerphoto,
                     'userBankDetails': userBankDetails,
-                }).then(function (result) {
-
+                    'regionId': regionId,
+                }).then(async function (result) {
+                    if (regionId !== savedRegionId) {
+                        jQuery("#data-table_processing").show();
+                        await spideliMoveProviderRegion(ownerId, regionId);
+                    }
                     window.location.href = '{{ route("user.profile")}}';
 
+                }).catch(function (error) {
+                    jQuery("#data-table_processing").hide();
+                    $(".error_top").show();
+                    $(".error_top").html("");
+                    $(".error_top").append($("<p>").text(String(error)));
+                    window.scrollTo(0, 0);
                 })
             }
         })

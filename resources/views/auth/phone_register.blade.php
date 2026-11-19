@@ -133,6 +133,14 @@ foreach ($countries as $keycountry => $valuecountry) {
                                         </span>
                             @enderror
                         </div>
+                        {{-- Region, as in the store panel --}}
+                        <div class="form-group" id="region_div">
+                            <label class="text-dark">{{ trans('lang.region') }}<span class="required-field"></span></label>
+                            <select id="region_id" class="form-control">
+                                <option value="">{{ trans('lang.select_region') }}</option>
+                            </select>
+                            <input type="hidden" id="hidden_region"/>
+                        </div>
                         <div class="form-group " id="otp-box" style="display:none;">
                             <input class="form-control" placeholder="OTP" id="verificationcode" type="text"
                                    class="form-control" name="otp" value="{{ old('otp') }}" required autocomplete="otp"
@@ -243,6 +251,10 @@ foreach ($countries as $keycountry => $valuecountry) {
             placeholder: "{{trans('lang.select_country')}}",
             allowClear: true
         });
+        await loadRegions();
+        jQuery("#region_id").select2({
+            placeholder: "{{ trans('lang.select_region') }}"
+        });
         // --- ADD THIS BLOCK TO SET DEFAULT COUNTRY CODE ---
     var globalSettingsRef = database.collection('settings').doc('globalSettings');
     globalSettingsRef.get().then(async function (snapshot) {
@@ -264,6 +276,29 @@ foreach ($countries as $keycountry => $valuecountry) {
     });
     // --- END OF DEFAULT COUNTRY LOGIC ---
     });
+
+    /* Region (as in the store panel): published regions only, sorted by name. Filtered and sorted here, because
+     * where('publish') with orderBy('name') would need a composite index. */
+    async function loadRegions() {
+        var snapshots = await database.collection('regions').get();
+        var regions = [];
+        snapshots.docs.forEach(function (doc) {
+            var region = doc.data();
+            if (region.publish !== true) {
+                return;
+            }
+            region.id = region.id || doc.id;
+            regions.push(region);
+        });
+        regions.sort(function (a, b) {
+            return (a.name || '').localeCompare(b.name || '');
+        });
+        regions.forEach(function (region) {
+            $('#region_id').append($("<option></option>").attr("value", region.id).text(region.name));
+        });
+        return regions;
+    }
+
     function sendOTP() {
         if (!window.recaptchaVerifier) {
             jQuery("#recaptcha-container").show();
@@ -276,6 +311,7 @@ foreach ($countries as $keycountry => $valuecountry) {
         var firstName = $('#firstName').val();
         var lastName = $('#lastName').val();
         var email = $('#email').val();
+        var regionId = $('#region_id').val();
         if (firstName == '') {
             $(".error_top").show();
             $(".error_top").html("");
@@ -296,6 +332,11 @@ foreach ($countries as $keycountry => $valuecountry) {
             $(".error_top").html("");
             $(".error_top").append("<p>{{trans('lang.enter_owners_phone')}}</p>");
             window.scrollTo(0, 0);
+        } else if (regionId == '' || regionId == null) {
+            $(".error_top").show();
+            $(".error_top").html("");
+            $(".error_top").append("<p>{{ trans('lang.select_region_error') }}</p>");
+            window.scrollTo(0, 0);
         } else {
             var phoneNumber = '+' + jQuery("#country_selector").val() + jQuery("#phone").val();
             database.collection("users").where('phoneNumber', '==', phoneNumber).get().then(async function (snapshots) {
@@ -306,6 +347,7 @@ foreach ($countries as $keycountry => $valuecountry) {
                     $('#hidden_fName').val(firstName);
                     $('#hidden_lName').val(lastName);
                     $('#hidden_email').val(email);
+                    $('#hidden_region').val(regionId);
                     firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
                         .then(function (confirmationResult) {
                             $("#verificationcode").val("");
@@ -316,6 +358,7 @@ foreach ($countries as $keycountry => $valuecountry) {
                                 $('#lastName_div').hide();
                                 $('#email_div').hide();
                                 $('#phone-box').hide();
+                                $('#region_div').hide();
                                 jQuery("#recaptcha-container").hide();
                                 jQuery("#verify_btn").show();
                                 jQuery("#otp-box").show();
@@ -366,6 +409,7 @@ foreach ($countries as $keycountry => $valuecountry) {
                         'userBankDetails': userBankDetails,
                         'wallet_amount':0,
                         'section_id': '',
+                        'regionId': $('#hidden_region').val(),
                         }).then(async function (result) {
                             jQuery("#data-table_processing").hide();
                             autoAprroveVendor.get().then(async function (snapshots) {

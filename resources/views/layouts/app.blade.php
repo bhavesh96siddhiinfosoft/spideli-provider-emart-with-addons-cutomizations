@@ -1233,6 +1233,21 @@
             });
         }
 
+        /* The provider's region is carried onto the services and workers they create or edit (as in the store
+         * panel). Returns {regionId} or {} when the provider has none, so an empty region never overwrites one. */
+        var spdProviderRegionPromise = null;
+        function spideliProviderRegionFields() {
+            if (!spdProviderRegionPromise) {
+                spdProviderRegionPromise = firebase.firestore().collection('users').doc(cuser_id).get().then(function (doc) {
+                    var regionId = doc.exists ? (doc.data().regionId || '') : '';
+                    return regionId ? {'regionId': regionId} : {};
+                }).catch(function () {
+                    return {};
+                });
+            }
+            return spdProviderRegionPromise;
+        }
+
         /* Point #111: green "Verified" badge helper (#0FBF00). */
         function spideliVerifiedBadge(isVerified, title) {
             if (!isVerified) {
