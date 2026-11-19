@@ -84,6 +84,14 @@
 
         </li>
 
+        {{-- #114: subscriptions the provider sells to their clients (not "My Subscriptions", what the provider pays) --}}
+        <li>
+            <a class="waves-effect waves-dark" href="{!! route('client-subscriptions') !!}" aria-expanded="false">
+                <i class="mdi mdi-wallet-membership"></i>
+                <span class="hide-menu">{{ trans('lang.client_subscription_plural') }}</span>
+            </a>
+        </li>
+
         <li>
 
             <a class="waves-effect waves-dark" href="{!! url('wallettransaction') !!}" aria-expanded="false">

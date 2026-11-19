@@ -82,6 +82,13 @@ Route::get('/coupons', [App\Http\Controllers\CouponController::class, 'index'])-
 Route::get('/coupons/create', [App\Http\Controllers\CouponController::class, 'create'])->name('coupons.create');
 Route::get('/coupons/edit/{id}', [App\Http\Controllers\CouponController::class, 'edit'])->name('coupons.edit');
 
+// #114: subscriptions the provider sells to their clients (plans; subscribers and payments read-only)
+Route::get('/client-subscriptions', [App\Http\Controllers\ClientSubscriptionController::class, 'index'])->name('client-subscriptions');
+Route::get('/client-subscriptions/create', [App\Http\Controllers\ClientSubscriptionController::class, 'create'])->name('client-subscriptions.create');
+Route::get('/client-subscriptions/edit/{id}', [App\Http\Controllers\ClientSubscriptionController::class, 'edit'])->name('client-subscriptions.edit');
+Route::get('/client-subscriptions/subscribers', [App\Http\Controllers\ClientSubscriptionController::class, 'subscribers'])->name('client-subscriptions.subscribers');
+Route::get('/client-subscriptions/payments', [App\Http\Controllers\ClientSubscriptionController::class, 'payments'])->name('client-subscriptions.payments');
+
 Route::get('/wallettransaction', [App\Http\Controllers\TransactionController::class, 'index'])->name('wallettransaction');
 
 Route::get('/users/profile', [App\Http\Controllers\UserController::class, 'profile'])->name('user.profile');
